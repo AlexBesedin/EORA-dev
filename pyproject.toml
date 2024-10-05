@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "eora-dev"
+version = "0.1.0"
+description = ""
+authors = ["AlexBesedin <alebesedin@yandex.ru>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "3.11.9"
+beautifulsoup4 = "^4.12.3"
+requests = "^2.32.3"
+aiogram = "^3.10.0"
+python-dotenv = "^1.0.1"
+sqlalchemy = "^2.0.20"
+psycopg2-binary = "2.9.7"
+asyncpg = "0.28.0"
+alembic = "1.13.2"
+openai = "^1.51.0"
+pymorphy3 = "^2.0.2"
+
+
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

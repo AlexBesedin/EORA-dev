@@ -1,0 +1,37 @@
+services:
+  eora-dev:
+    image: postgres:13.0-alpine
+    restart: always
+    volumes:
+      - db_data_dev:/var/lib/postgresql/data
+    env_file:
+      - ../.env
+    ports:
+      - "5435:5432"
+    networks:
+      - my_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  eora-bot:
+    build:
+      context: ../
+      dockerfile: Dockerfile
+    restart: always
+    env_file:
+      - ../.env
+    depends_on:
+      eora-dev:
+        condition: service_healthy
+    networks:
+      - my_network
+
+networks:
+  my_network:
+    driver: bridge
+
+volumes:
+  db_data_dev:

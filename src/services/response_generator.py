@@ -1,3 +1,4 @@
+import random
 import html
 import logging
 from openai import OpenAI
@@ -21,15 +22,15 @@ client = OpenAI(
 def generate_response(user_query, matching_projects):
     if not matching_projects:
         return NO_PROJECTS_FOUND_MESSAGE
+    
+    if len(matching_projects) > 2:
+        matching_projects = random.sample(matching_projects, 2)
 
-    matching_projects = matching_projects[:3]
-
-    project_descriptions = []
-    for i, project in enumerate(matching_projects, start=1):
-        project_descriptions.append(
-            f"{i}. {project['title']} для {project['company']}. "
-            f"Решение: {project['solution'][:100]}..."
-        )
+    project_descriptions = [
+        f"{project['title']} для {project['company']}. "
+        f"Решение: {project['solution'][:100]}..."
+        for project in matching_projects
+    ]
 
     context = GPT_CONTEXT_INTRO + "\n".join(project_descriptions)
 

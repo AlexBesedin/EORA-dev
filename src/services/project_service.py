@@ -1,5 +1,5 @@
 import re
-
+import random
 from typing import List
 from sqlalchemy.ext.asyncio import AsyncSession
 from config import Resources
@@ -63,7 +63,19 @@ async def get_projects_by_similar_tags(
             })
 
     project_scores.sort(key=lambda x: x['score'], reverse=True)
-    matching_projects = [item['project'] for item in project_scores]
+
+    grouped_projects = {}
+    for item in project_scores:
+        score = item['score']
+        if score not in grouped_projects:
+            grouped_projects[score] = []
+        grouped_projects[score].append(item['project'])
+    
+    for score in grouped_projects:
+        random.shuffle(grouped_projects[score])
+    
+    matching_projects = []
+    for score in sorted(grouped_projects.keys(), reverse=True):
+        matching_projects.extend(grouped_projects[score])
 
     return matching_projects
-

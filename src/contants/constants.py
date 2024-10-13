@@ -34,5 +34,9 @@ GPT_CONTEXT_INTRO = (
     "Информация о проектах:\n"
 )
 
-MAX_TOKENS = 150
+MAX_TOKENS = 200
 TEMPERATURE = 0.7
+MIN_SIMILARITY_THRESHOLD = 0.2
+
+RATING_PROMPT_TEXT = "Оцените от 1 до 5, насколько точно был ответ на ваш вопрос."
+THANK_YOU_TEXT = "Спасибо за вашу оценку: {rating}"

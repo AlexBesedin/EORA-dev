@@ -1,5 +1,6 @@
-from sqlalchemy import ARRAY, String, Text
+from sqlalchemy import ARRAY, Float, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import relationship
 from database.db import Base
 
 
@@ -13,3 +14,6 @@ class Project(Base):
     problem: Mapped[str] = mapped_column(Text, nullable=True)
     solution: Mapped[str] = mapped_column(Text, nullable=True)
     tags: Mapped[list[str]] = mapped_column(ARRAY(String), nullable=True, index=True)
+    embedding: Mapped[list[float]] = mapped_column(ARRAY(Float), nullable=True)
+
+    ratings = relationship("Rating", back_populates="project")

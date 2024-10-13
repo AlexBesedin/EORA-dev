@@ -1,16 +1,14 @@
 import os
-from dataclasses import dataclass
 from pathlib import Path
 from dotenv import load_dotenv
 import pymorphy3
-from openai import OpenAI
+from sentence_transformers import SentenceTransformer
 
 BASE_DIR = Path(__file__).parent.parent
 
 load_dotenv()
 
 
-@dataclass
 class Config:
     DB_URL = os.getenv("DB_URL", "")
     BOT_TOKEN = os.getenv("BOT_TOKEN", "")
@@ -20,3 +18,6 @@ class Config:
 
 class Resources:
     morph = pymorphy3.MorphAnalyzer()
+    model = SentenceTransformer('paraphrase-MiniLM-L6-v2')
+    # model = SentenceTransformer('distiluse-base-multilingual-cased-v2') #bad
+    # model = SentenceTransformer('bert-base-nli-mean-tokens')

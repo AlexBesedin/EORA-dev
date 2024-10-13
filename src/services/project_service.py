@@ -1,5 +1,5 @@
 import time
-import torch
+import numpy as np
 from typing import Dict, List
 from sqlalchemy.ext.asyncio import AsyncSession
 from sentence_transformers import util

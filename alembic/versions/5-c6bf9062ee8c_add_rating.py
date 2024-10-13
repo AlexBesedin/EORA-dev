@@ -5,12 +5,10 @@ Revises: d38341733b04
 Create Date: 2024-10-13 10:03:48.587986
 
 """
-import datetime
 from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision: str = 'c6bf9062ee8c'
@@ -32,5 +30,3 @@ def upgrade():
 
 def downgrade():
     op.drop_table('ratings')
-
-

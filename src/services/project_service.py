@@ -59,8 +59,6 @@ async def get_projects_by_similar_tags(db: AsyncSession, user_query: str) -> Lis
     return matching_projects, response_time
 
 
-
-
 def search_by_project_embeddings_fallback(projects: List[Dict], query_embedding: torch.Tensor) -> List[Dict]:
     """
     Запасной поиск по проектам с использованием косинусного сходства между эмбеддингами.

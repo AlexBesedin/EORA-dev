@@ -16,7 +16,7 @@ async def get_projects_by_similar_tags(db: AsyncSession, user_query: str) -> Lis
     1. Предобрабатывает текст запроса и преобразует его в эмбеддинг.
     2. Извлекает название компании из запроса (если есть) для фильтрации проектов по компании.
     3. Вычисляет косинусное сходство между эмбеддингом запроса и эмбеддингами проектов.
-    4. Если достаточное количество проектов с высоким сходством не найдено, выполняет fallback-поиск по тегам.
+    4. Если достаточное количество проектов с высоким сходством не найдено, выполняет fallback-поиск.
     """
     processed_query = preprocess_text(user_query)
     start_time = time.time() 
@@ -43,7 +43,6 @@ async def get_projects_by_similar_tags(db: AsyncSession, user_query: str) -> Lis
     response_time = end_time - start_time
 
     if len(project_scores) == 0 or project_scores[0]['score'] < 0.5:
-        print("Поиск по эмбеддингам не дал результатов, переключаемся на поиск по тегам...")
         matching_projects = search_by_project_embeddings_fallback(projects, query_embedding)
     else:
         matching_projects = [{

@@ -20,7 +20,6 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade():
-    # Создаем таблицу для хранения оценок с привязкой к проектам
     op.create_table(
         'ratings',
         sa.Column('id', sa.Integer, primary_key=True, autoincrement=True),
@@ -32,7 +31,6 @@ def upgrade():
     )
 
 def downgrade():
-    # Удаляем таблицу
     op.drop_table('ratings')
 
 

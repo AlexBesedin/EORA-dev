@@ -1,70 +1,120 @@
 import time
 import numpy as np
-from typing import Dict, List
+from typing import Dict, List, Tuple
 from sqlalchemy.ext.asyncio import AsyncSession
 from sentence_transformers import util
 
 from config import Resources
+from contants.constants import MIN_SIMILARITY_THRESHOLD
 from crud.project import crud_project
-from utils.utils import extract_company_from_query, preprocess_text
+from utils.utils import preprocess_text
 
 
-async def get_projects_by_similar_tags(db: AsyncSession, user_query: str) -> List[Dict]:
+async def get_projects_by_similar_tags(
+    db: AsyncSession, 
+    user_query: str
+) -> Tuple[List[Dict], float]:
     """
     Поиск проектов на основе запроса пользователя.
 
-    1. Предобрабатывает текст запроса и преобразует его в эмбеддинг.
-    2. Извлекает название компании из запроса (если есть) для фильтрации проектов по компании.
-    3. Вычисляет косинусное сходство между эмбеддингом запроса и эмбеддингами проектов.
-    4. Если достаточное количество проектов с высоким сходством не найдено, выполняет fallback-поиск.
+    1. Предобрабатывает текст запроса.
+    2. Выполняет поиск в следующем порядке:
+       a) По тегам
+       b) По компании
+       c) Fallback-поиск по всем полям
     """
     processed_query = preprocess_text(user_query)
-    start_time = time.time() 
+    start_time = time.time()
     query_embedding = Resources.model.encode([processed_query])[0]
-    company_name = extract_company_from_query(user_query)
     projects = await crud_project.get_all_projects_with_embeddings(db=db)
 
-    project_scores = []
+    matching_projects = search_by_tags(
+        projects=projects, 
+        processed_query=processed_query, 
+        query_embedding=query_embedding
+    )
+    if matching_projects:
+        return matching_projects, time.time() - start_time
 
-    for project in projects:
-        if company_name and company_name not in project['company'].lower():
-            continue
-        project_embedding = project['embedding']
-        similarity_score = util.pytorch_cos_sim(query_embedding, project_embedding).item()
+    matching_projects = search_by_company(
+        projects=projects, 
+        processed_query=processed_query, 
+        query_embedding=query_embedding
+    )
+    if matching_projects:
+        return matching_projects, time.time() - start_time
 
-        project_scores.append({
-            "project": project,
-            "score": similarity_score
-        })
-
-    project_scores.sort(key=lambda x: x['score'], reverse=True)
-
-    end_time = time.time()  
-    response_time = end_time - start_time
-
-    if len(project_scores) == 0 or project_scores[0]['score'] < 0.5:
-        matching_projects = search_by_project_embeddings_fallback(projects, query_embedding)
-    else:
-        matching_projects = [{
-            "id": project['id'],
-            "title": item['project']['title'],
-            "url": item['project']['url'],
-            "company": item['project']['company'],
-            "tags": item['project']['tags'],
-            "problem": item['project']['problem'],
-            "solution": item['project']['solution'],
-            "similarity_score": item['score']
-        } for item in project_scores[:3]]
-
-    return matching_projects, response_time
+    matching_projects = search_by_project_embeddings_fallback(
+        projects=projects, 
+        query_embedding=query_embedding
+    )
+    return matching_projects, time.time() - start_time
 
 
-def search_by_project_embeddings_fallback(projects: List[Dict], query_embedding: np.ndarray) -> List[Dict]:
+def search_by_tags(
+    projects: List[Dict], 
+    processed_query: str, 
+    query_embedding: np.ndarray
+) -> List[Dict]:
     """
-    Запасной поиск по проектам с использованием косинусного сходства между эмбеддингами.
+    Поиск по тегам
+    """
+    matching_projects = []
+    query_words = set(processed_query.split())
+    for project in projects:
+        project_tags = set(tag.lower() for tag in project['tags'])
+        if query_words.intersection(project_tags):
+            similarity_score = util.pytorch_cos_sim(query_embedding, project['embedding']).item()
+            if similarity_score > MIN_SIMILARITY_THRESHOLD:
+                matching_projects.append({
+                    "id": project["id"],
+                    "title": project['title'],
+                    "url": project['url'],
+                    "company": project['company'],
+                    "tags": project['tags'],
+                    "problem": project['problem'],
+                    "solution": project['solution'],
+                    "similarity_score": similarity_score
+                })
+    matching_projects.sort(key=lambda x: x['similarity_score'], reverse=True)
+    return matching_projects[:3]
 
-    Используется, если основной поиск по компании и эмбеддингам не дал достаточных результатов. 
-    Вычисляет косинусное сходство между эмбеддингом запроса и эмбеддингами всех проектов.
+
+def search_by_company(
+    projects: List[Dict], 
+    processed_query: str, 
+    query_embedding: np.ndarray
+) -> List[Dict]:
+    """
+    Поиск по компаниям
+    """
+    matching_projects = []
+    query_words = set(processed_query.split())
+    for project in projects:
+        company_words = set(preprocess_text(project['company']).split())
+        if query_words.intersection(company_words):
+            similarity_score = util.pytorch_cos_sim(query_embedding, project['embedding']).item()
+            if similarity_score > MIN_SIMILARITY_THRESHOLD:
+                matching_projects.append({
+                    "id": project["id"],
+                    "title": project['title'],
+                    "url": project['url'],
+                    "company": project['company'],
+                    "tags": project['tags'],
+                    "problem": project['problem'],
+                    "solution": project['solution'],
+                    "similarity_score": similarity_score
+                })
+    matching_projects.sort(key=lambda x: x['similarity_score'], reverse=True)
+    return matching_projects[:3]
+
+
+def search_by_project_embeddings_fallback(
+    projects: List[Dict], 
+    query_embedding: np.ndarray
+) -> List[Dict]:
+    """
+    Запасной поиск по проектам.
     """
     matching_projects = [
         {

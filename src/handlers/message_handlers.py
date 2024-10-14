@@ -3,7 +3,12 @@ from aiogram import F, types, Router, Dispatcher
 from aiogram.filters import Command
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from contants.constants import PROCESSING_MESSAGE, RATING_PROMPT_TEXT, THANK_YOU_TEXT, WELCOME_MESSAGE
+from contants.constants import (
+    PROCESSING_MESSAGE, 
+    RATING_PROMPT_TEXT, 
+    THANK_YOU_TEXT, 
+    WELCOME_MESSAGE
+)
 from keyboards.keyboards import get_rating_keyboard
 from services import response_generator
 from services.project_service import get_projects_by_similar_tags

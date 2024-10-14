@@ -66,14 +66,5 @@ async def process_rating(callback_query: types.CallbackQuery, db: AsyncSession):
     await callback_query.message.edit_reply_markup(reply_markup=None)
     await callback_query.answer()
 
-
-
-
-
-
-
-
-
-
 def register_handlers_start(dp: Dispatcher):
     dp.include_router(router)
